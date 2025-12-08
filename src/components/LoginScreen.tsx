@@ -2,7 +2,9 @@ import { useState } from "react";
 
 type LoginScreenProps = {
   onSuccess: () => void;
+  dashboardReady?: boolean; // ✅ EKLE
 };
+
 
 export default function LoginScreen({ onSuccess }: LoginScreenProps) {
   const [username, setUsername] = useState("");

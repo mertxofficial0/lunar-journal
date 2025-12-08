@@ -4,7 +4,6 @@ import React, { useState } from "react";
 import Modal from "./ui/Modal";
 import Input from "./ui/Input";
 import DateInput from "./ui/DateInput";
-import Select from "./ui/CustomSelect";
 import TextArea from "./ui/TextArea";
 import type { Trade } from "../types";
 
