@@ -1,11 +1,12 @@
 import CustomSelect from "./ui/CustomSelect";
 import SegmentedDirection from "./ui/SegmentedDirection";
-import React, { useState } from "react";
+import { useState } from "react";
 import Modal from "./ui/Modal";
 import Input from "./ui/Input";
 import DateInput from "./ui/DateInput";
 import TextArea from "./ui/TextArea";
 import type { Trade } from "../types";
+
 
 type AddTradeFormProps = {
   isOpen: boolean;
@@ -29,6 +30,8 @@ export default function AddTradeForm({ isOpen, onClose, onAdd }: AddTradeFormPro
   const [mood, setMood] = useState<Trade["mood"]>("Calm");
   const [screenshotUrl, setScreenshotUrl] = useState("");
   const [notes, setNotes] = useState("");
+    
+
 
   const reset = () => {
     setDate("");
@@ -118,21 +121,22 @@ export default function AddTradeForm({ isOpen, onClose, onAdd }: AddTradeFormPro
         </div>
 
         {/* SetupTag + Mood */}
-        <div className="grid grid-cols-2 gap-4">
-          <Input
-            label="Setup Tag"
-            value={setupTag}
-            onChange={setSetupTag}
-            placeholder="FVG, BOS, CHoCH..."
-          />
-          <CustomSelect
-  label="Mood"
-  value={mood}
-  options={["Calm", "Focused", "Tilted", "Revenge", "Fearful"]}
-  onChange={(v) => setMood(v as Trade["mood"])}
-/>
+<div className="grid grid-cols-2 gap-4">
+  <Input
+    label="Setup Tag"
+    value={setupTag}
+    onChange={setSetupTag}
+    placeholder="FVG, BOS, CHoCH..."
+  />
 
-        </div>
+  <CustomSelect
+    label="Mood"
+    value={mood ?? "Calm"}
+    options={["Calm", "Focused", "Tilted", "Revenge", "Fearful"]}
+    onChange={(v) => setMood(v as Trade["mood"])}
+  />
+</div>
+
 
         {/* Screenshot + Notes */}
         <Input

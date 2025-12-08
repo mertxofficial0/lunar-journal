@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import type { Trade } from "../types";
 import AddTradeForm from "./AddTradeForm";
 import TradeDetailsModal from "./TradeDetailsModal";
