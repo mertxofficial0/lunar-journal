@@ -1,0 +1,273 @@
+/* ===========================================================
+   🔵 1) SPLASH ANİMASYONU
+=========================================================== */
+.splash-screen {
+  animation: splashFade 4s ease-out forwards;
+}
+
+@keyframes splashFade {
+  0% {
+    opacity: 0;
+    filter: blur(16px);
+  }
+  10% {
+    opacity: 1;
+    filter: blur(0px);
+  }
+  80% {
+    opacity: 1;
+    filter: blur(0px);
+  }
+  100% {
+    opacity: 0;
+    filter: blur(10px);
+  }
+}
+
+/* Loading bar */
+.loading-bar-inner {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(129, 140, 248, 0) 10%,
+    rgba(129, 140, 248, 0.5) 35%,
+    rgba(236, 72, 153, 0.9) 50%,
+    rgba(129, 140, 248, 0.5) 65%,
+    rgba(129, 140, 248, 0) 90%,
+    transparent 100%
+  );
+  width: 200%;
+  transform: translateX(-100%);
+  animation: loadingBarMove 1.6s linear infinite;
+}
+
+@keyframes loadingBarMove {
+  0% {
+    transform: translateX(-100%);
+  }
+  100% {
+    transform: translateX(0%);
+  }
+}
+
+/* ===========================================================
+   🟣 2) LOGIN — FADE-IN
+=========================================================== */
+.login-fade {
+  animation: loginFade 0.3s ease-out forwards;
+}
+
+@keyframes loginFade {
+  0% {
+    opacity: 0;
+    transform: translateY(4px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0px);
+  }
+}
+
+/* NEW — Liquid Drift Exit (Login → Dashboard transition) */
+.login-exit {
+  animation: loginSoftExit 0.42s ease forwards;
+}
+
+@keyframes loginSoftExit {
+  0% {
+    opacity: 1;
+    transform: translateY(0);
+    filter: blur(0px);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(40px);
+    filter: blur(10px);
+  }
+}
+
+
+
+
+/* ===========================================================
+   🟢 3) APP (Dashboard + Journal) — Liquid Drift Enter
+=========================================================== */
+.app-screen-enter {
+  animation: dashboardSoftEnter 0.38s ease-out forwards;
+}
+
+@keyframes dashboardSoftEnter {
+  0% {
+    opacity: 0;
+    transform: translateY(10px);
+    filter: blur(8px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
+    filter: blur(0);
+  }
+}
+
+
+
+
+
+
+
+/* ===========================================================
+   🟥 4) LOGOUT Fading
+=========================================================== */
+.logout-fade {
+  opacity: 0.25;
+  filter: blur(4px);
+  transition: opacity 0.6s ease, filter 0.6s ease;
+}
+
+/* ===========================================================
+   🟡 5) PAGE TRANSITION (Sidebar navigation)
+=========================================================== */
+.page-transition {
+  animation: lunarGlassFade 0.22s ease-out;
+}
+
+@keyframes lunarGlassFade {
+  0% {
+    opacity: 0;
+    transform: scale(0.985);
+    filter: blur(6px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+    filter: blur(0px);
+  }
+}
+
+/* ===========================================================
+   🔥 6) MODAL — FAST & SMOOTH
+=========================================================== */
+@keyframes modalFastOpen {
+  0% {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes modalFastClose {
+  0% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+}
+
+@keyframes modalBackdropFadeOut {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+/* ===========================================================
+   🔮 7) GLOBAL GLASS CARD
+=========================================================== */
+.glass-card {
+  position: relative;
+  border-radius: 24px;
+  background: rgba(255, 255, 255, 0.78);
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  box-shadow: 0 22px 55px rgba(148, 163, 184, 0.55);
+  backdrop-filter: blur(22px);
+  -webkit-backdrop-filter: blur(22px);
+  overflow: hidden;
+}
+
+.glass-card::before {
+  content: "";
+  position: absolute;
+  inset-inline: 12%;
+  top: -40px;
+  height: 95px;
+  background: linear-gradient(
+    to bottom,
+    rgba(255, 255, 255, 0.95),
+    rgba(255, 255, 255, 0.35),
+    transparent
+  );
+  opacity: 0.9;
+  filter: blur(14px);
+  pointer-events: none;
+}
+
+.glass-card::after {
+  content: "";
+  position: absolute;
+  inset-inline: 5%;
+  bottom: -40px;
+  height: 90px;
+  background: radial-gradient(
+    circle at center,
+    rgba(168, 85, 247, 0.22),
+    transparent 70%
+  );
+  filter: blur(18px);
+  opacity: 0.7;
+  pointer-events: none;
+}
+
+/* ===========================================================
+   🧼 8) SCROLLBAR HIDE
+=========================================================== */
+::-webkit-scrollbar {
+  width: 0px;
+  height: 0px;
+}
+
+html {
+  scrollbar-width: none;
+}
+
+/* ===========================================================
+   ✔ UTILITY ANIMATIONS
+=========================================================== */
+@keyframes fadeIn {
+  from { opacity: 0 }
+  to { opacity: 1 }
+}
+
+@keyframes popup {
+  0% {
+    opacity: 0;
+    transform: scale(0.92) translateY(8px);
+    filter: blur(6px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+    filter: blur(0);
+  }
+}
+@keyframes softConfirm {
+  0% {
+    opacity: 0;
+    transform: scale(0.96) translateY(6px);
+    filter: blur(4px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+    filter: blur(0);
+  }
+}
+
+.animate-softConfirm {
+  animation: softConfirm 0.16s ease-out forwards;
+}

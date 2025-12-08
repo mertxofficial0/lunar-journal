@@ -1,2 +1,3 @@
-# lunar-journal
-Personal trading journal dashboard
+# Lunar Journal
+
+Personal trading journal dashboard.
