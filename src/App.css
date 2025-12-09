@@ -271,3 +271,38 @@ html {
 .animate-softConfirm {
   animation: softConfirm 0.16s ease-out forwards;
 }
+/* CONFIRM ENTER */
+@keyframes confirmEnter {
+  0% {
+    opacity: 0;
+    transform: scale(0.96) translateY(4px);
+    filter: blur(4px);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+    filter: blur(0);
+  }
+}
+
+.animate-confirm-enter {
+  animation: confirmEnter 0.18s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+/* CONFIRM EXIT */
+@keyframes confirmExit {
+  0% {
+    opacity: 1;
+    transform: scale(1);
+    filter: blur(0);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(0.96);
+    filter: blur(4px);
+  }
+}
+
+.animate-confirm-exit {
+  animation: confirmExit 0.16s ease-in forwards;
+}

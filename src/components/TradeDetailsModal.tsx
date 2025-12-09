@@ -18,6 +18,8 @@ export default function TradeDetailsModal({
   const [isClosing, setIsClosing] = useState(false);
   const [isConfirmOpen, setIsConfirmOpen] = useState(false);
 
+
+
   const pnlPositive = trade ? trade.resultUsd >= 0 : false;
 
   useEffect(() => {
@@ -154,17 +156,51 @@ export default function TradeDetailsModal({
             onClose={() => setIsNotesOpen(false)}
             notes={trade.notes ?? ""}
           />
+{/* ✅ SCREENSHOT */}
+{trade.screenshotUrl && (
+  <div className="mt-5">
+    
+
+    <a
+      href={trade.screenshotUrl}
+      target="_blank"
+      rel="noopener noreferrer"
+      className="
+        block overflow-hidden rounded-3xl
+        border border-white/40
+        bg-white/100 backdrop-blur-xl
+        shadow-[0_16px_40px_rgba(15,23,42,0.18)]
+        hover:scale-[1.01] transition
+      "
+    >
+      <img
+        src={trade.screenshotUrl}
+        alt="Trade Screenshot"
+        className="
+          w-full h-auto max-h-[380px]
+          object-contain
+          bg-slate-100
+        "
+        onError={(e) => {
+          e.currentTarget.style.display = "none";
+        }}
+      />
+    </a>
+  </div>
+)}
 
           {/* ACTIONS */}
-<div className="flex justify-end gap-3 items-center">
+<div className="flex justify-end items-center gap-3 mt-4">
   {!isConfirmOpen ? (
     <button
       onClick={() => setIsConfirmOpen(true)}
       className="
-        px-5 py-2 rounded-xl text-sm font-medium
-        bg-rose-600 text-white
-        shadow-[0_10px_30px_rgba(244,63,94,0.45)]
-        hover:bg-rose-700
+        px-5 py-2 rounded-xl
+        text-sm font-medium
+        bg-rose-500 text-white
+        shadow-[0_12px_30px_rgba(244,63,94,0.45)]
+        hover:bg-rose-600
+        active:scale-95
         transition
       "
     >
@@ -174,33 +210,45 @@ export default function TradeDetailsModal({
     <div
       className="
         flex items-center gap-3
-        px-4 py-2 rounded-2xl
-        bg-rose-50 border border-rose-200
-        animate-softConfirm
+        animate-confirm-enter
       "
     >
-      <span className="text-sm text-rose-700 font-medium">
+      <span className="text-sm font-medium text-slate-700">
         Emin misin?
       </span>
 
+      {/* EVET */}
       <button
         onClick={confirmDelete}
         className="
-          px-4 py-1.5 rounded-lg text-sm
-          bg-rose-600 text-white
-          hover:bg-rose-700
+          px-6 py-2 rounded-xl
+          text-sm font-medium
+          bg-rose-500 text-white
+          shadow-[0_12px_30px_rgba(244,63,94,0.45)]
+          hover:bg-rose-600
+          active:scale-95
           transition
         "
       >
         Evet
       </button>
 
+      {/* VAZGEÇ */}
       <button
-        onClick={() => setIsConfirmOpen(false)}
+        onClick={(e) => {
+          const parent = (e.currentTarget.parentElement as HTMLElement);
+          parent.classList.remove("animate-confirm-enter");
+          parent.classList.add("animate-confirm-exit");
+
+          setTimeout(() => {
+            setIsConfirmOpen(false);
+          }, 160);
+        }}
         className="
-          px-4 py-1.5 rounded-lg text-sm
-          bg-slate-200 text-slate-700
-          hover:bg-slate-300
+          px-6 py-2 rounded-xl
+          text-sm font-medium
+          bg-slate-100 text-slate-600
+          hover:bg-slate-200
           transition
         "
       >
@@ -209,18 +257,28 @@ export default function TradeDetailsModal({
     </div>
   )}
 
+  {/* KAPAT */}
   <button
     onClick={handleClose}
     className="
-      px-6 py-2 rounded-xl text-sm
-      bg-slate-200 text-slate-700
-      hover:bg-slate-300
+      px-6 py-2 rounded-xl
+      text-sm font-medium
+      bg-slate-100 text-slate-600
+      hover:bg-slate-200
       transition
     "
   >
     Kapat
   </button>
 </div>
+
+
+
+
+
+
+
+
 
         </>
       )}
