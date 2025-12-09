@@ -156,31 +156,72 @@ export default function TradeDetailsModal({
           />
 
           {/* ACTIONS */}
-          <div className="flex justify-end gap-3">
-            {!isConfirmOpen ? (
-              <button
-                onClick={() => setIsConfirmOpen(true)}
-                className="px-5 py-2 rounded-xl text-sm font-medium bg-rose-600 text-white"
-              >
-                Sil
-              </button>
-            ) : (
-              <>
-                <span className="text-sm">Emin misin?</span>
-                <button onClick={confirmDelete}>Evet</button>
-                <button onClick={() => setIsConfirmOpen(false)}>
-                  Vazgeç
-                </button>
-              </>
-            )}
+<div className="flex justify-end gap-3 items-center">
+  {!isConfirmOpen ? (
+    <button
+      onClick={() => setIsConfirmOpen(true)}
+      className="
+        px-5 py-2 rounded-xl text-sm font-medium
+        bg-rose-600 text-white
+        shadow-[0_10px_30px_rgba(244,63,94,0.45)]
+        hover:bg-rose-700
+        transition
+      "
+    >
+      Sil
+    </button>
+  ) : (
+    <div
+      className="
+        flex items-center gap-3
+        px-4 py-2 rounded-2xl
+        bg-rose-50 border border-rose-200
+        animate-softConfirm
+      "
+    >
+      <span className="text-sm text-rose-700 font-medium">
+        Emin misin?
+      </span>
 
-            <button
-              onClick={handleClose}
-              className="px-6 py-2 rounded-xl text-sm bg-slate-200"
-            >
-              Kapat
-            </button>
-          </div>
+      <button
+        onClick={confirmDelete}
+        className="
+          px-4 py-1.5 rounded-lg text-sm
+          bg-rose-600 text-white
+          hover:bg-rose-700
+          transition
+        "
+      >
+        Evet
+      </button>
+
+      <button
+        onClick={() => setIsConfirmOpen(false)}
+        className="
+          px-4 py-1.5 rounded-lg text-sm
+          bg-slate-200 text-slate-700
+          hover:bg-slate-300
+          transition
+        "
+      >
+        Vazgeç
+      </button>
+    </div>
+  )}
+
+  <button
+    onClick={handleClose}
+    className="
+      px-6 py-2 rounded-xl text-sm
+      bg-slate-200 text-slate-700
+      hover:bg-slate-300
+      transition
+    "
+  >
+    Kapat
+  </button>
+</div>
+
         </>
       )}
     </Modal>

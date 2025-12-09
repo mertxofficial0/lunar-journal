@@ -3,17 +3,21 @@
   <head>
     <meta charset="UTF-8" />
 
-    <!-- LUNAR favicon (SVG + PNG fallback) -->
-    <link rel="icon" href="/lunar.png?v=2" type="image/png" />
+    <!-- ✅ LUNAR favicon -->
+    <link rel="icon" type="image/png" href="/lunar.png" />
 
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
-    <!-- Sekme başlığı -->
+    <!-- ✅ Sekme başlığı -->
     <title>Lunar Journal</title>
   </head>
 
   <body>
     <div id="root"></div>
+
+    <!-- react-datepicker popup buraya render edilir -->
+    <div id="root-portal"></div>
+
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
