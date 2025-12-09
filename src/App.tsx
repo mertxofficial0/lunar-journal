@@ -1,13 +1,40 @@
 import "./App.css";
-import React, { useState, useEffect, useMemo, useCallback, useRef } from "react";
+import React, {
+  useState,
+  useEffect,
+  useMemo,
+  useCallback,
+  useRef,
+} from "react";
+
 import SplashScreen from "./components/SplashScreen";
 import LoginScreen from "./components/LoginScreen";
 import { Sidebar } from "./components/Sidebar";
 import { DashboardView } from "./components/DashboardView";
 import JournalView from "./components/JournalView";
+
 import type { Trade } from "./types";
 import { getTrades, addTrade, deleteTrade } from "./lib/trades";
+import { supabase } from "./lib/supabase";
 
+/* =========================
+   ✅ DB → UI SAFE MAPPER
+========================= */
+const mapDbTradeToTrade = (db: any): Trade => ({
+  id: db.id,
+  date: db.date,
+  pair: db.pair,
+  direction: db.direction,
+  session: db.session,
+  strategy: db.strategy,
+  risk: Number(db.risk),
+  resultUsd: Number(db.result_usd),
+  resultR: Number(db.result_r),
+  setupTag: db.setup_tag ?? undefined,
+  mood: db.mood ?? undefined,
+  screenshotUrl: db.screenshot_url ?? undefined,
+  notes: db.notes ?? undefined,
+});
 
 function App() {
   const [stage, setStage] = useState<"splash" | "login" | "app">("splash");
@@ -17,32 +44,81 @@ function App() {
   const [dashboardVisible, setDashboardVisible] = useState(false);
   const [dashboardReady, setDashboardReady] = useState(false);
 
-  // ⭐ Artık her sayfanın kendi scroll container’ı var
   const dashScrollRef = useRef<HTMLDivElement>(null);
   const journalScrollRef = useRef<HTMLDivElement>(null);
 
   const [trades, setTrades] = useState<Trade[]>([]);
-  
+
+  /* =========================
+     ✅ INITIAL LOAD (DB)
+  ========================= */
   useEffect(() => {
-  getTrades()
-    .then(setTrades)
-    .catch(console.error);
-}, []);
+    getTrades()
+      .then(setTrades)
+      .catch(console.error);
+  }, []);
 
+  /* =========================
+     ✅ REALTIME SYNC
+  ========================= */
+  useEffect(() => {
+    const channel = supabase
+      .channel("trades-realtime")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "trades" },
+        (payload) => {
+          if (payload.eventType === "INSERT") {
+            setTrades((prev) => [
+              mapDbTradeToTrade(payload.new),
+              ...prev,
+            ]);
+          }
 
+          if (payload.eventType === "UPDATE") {
+            setTrades((prev) =>
+              prev.map((t) =>
+                t.id === payload.new.id
+                  ? mapDbTradeToTrade(payload.new)
+                  : t
+              )
+            );
+          }
 
-  const handleAddTrade = useCallback(async (t: Omit<Trade, "id">) => {
-  const saved = await addTrade(t);
-  setTrades((prev) => [...prev, saved]);
-}, []);
+          if (payload.eventType === "DELETE") {
+            setTrades((prev) =>
+              prev.filter((t) => t.id !== payload.old.id)
+            );
+          }
+        }
+      )
+      .subscribe();
 
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
 
-  const handleDeleteTrade = useCallback(async (id: string) => {
-  await deleteTrade(id);
-  setTrades((prev) => prev.filter((x) => x.id !== id));
-}, []);
+  /* =========================
+     ✅ ADD / DELETE
+  ========================= */
+  const handleAddTrade = useCallback(
+    async (t: Omit<Trade, "id">) => {
+      await addTrade(t); // realtime ekleyecek
+    },
+    []
+  );
 
+  const handleDeleteTrade = useCallback(
+    async (id: string) => {
+      await deleteTrade(id); // realtime silecek
+    },
+    []
+  );
 
+  /* =========================
+     ✅ STATS (SAFE)
+  ========================= */
   const stats = useMemo(() => {
     const total = trades.length;
     const wins = trades.filter((t) => t.resultUsd > 0).length;
@@ -72,18 +148,19 @@ function App() {
     };
   }, [trades]);
 
-  // SPLASH → LOGIN
+  /* =========================
+     UI FLOW (AYNI)
+  ========================= */
   useEffect(() => {
     const t = setTimeout(() => setStage("login"), 4000);
     return () => clearTimeout(t);
   }, []);
 
-  // LOGIN aşamasında dashboard + journal preload
   useEffect(() => {
     if (stage === "login") {
       const t = setTimeout(() => {
         setPreloadDashboard(true);
-        setDashboardReady(true); // login ekranına "hazır" sinyali
+        setDashboardReady(true);
       }, 150);
       return () => clearTimeout(t);
     } else {
@@ -92,7 +169,6 @@ function App() {
     }
   }, [stage]);
 
-  // APP görünür animasyonu
   useEffect(() => {
     if (stage === "app") {
       setDashboardVisible(false);
@@ -103,7 +179,6 @@ function App() {
     }
   }, [stage]);
 
-  // ⭐ SCROLL RESET — her sayfanın kendi scroll kabı, reset görünmüyor
   useEffect(() => {
     if (page === "dashboard" && dashScrollRef.current) {
       dashScrollRef.current.scrollTop = 0;
@@ -121,10 +196,8 @@ function App() {
     }, 1500);
   };
 
-  // === SPLASH
   if (stage === "splash") return <SplashScreen />;
 
-  // === LOGIN + preload
   if (stage === "login") {
     return (
       <>
@@ -136,77 +209,53 @@ function App() {
         {preloadDashboard && (
           <div className="opacity-0 pointer-events-none absolute inset-0 h-0 overflow-hidden">
             <Sidebar current={page} onChange={() => {}} onLogout={() => {}} />
-            <div className="overflow-y-auto">
-              <DashboardView trades={trades} stats={stats} />
-              <JournalView
-                trades={trades}
-                stats={stats}
-                onAddTrade={handleAddTrade}
-                onDeleteTrade={handleDeleteTrade}
-              />
-            </div>
+            <DashboardView trades={trades} stats={stats} />
+            <JournalView
+              trades={trades}
+              stats={stats}
+              onAddTrade={handleAddTrade}
+              onDeleteTrade={handleDeleteTrade}
+            />
           </div>
         )}
       </>
     );
   }
 
-  // === APP
   const showDashboard = stage === "app" || preloadDashboard;
 
   return (
     <div
       className={`
-      ${dashboardVisible ? "app-screen-enter" : "opacity-0"}
-      flex h-screen w-screen overflow-hidden px-6 py-6 gap-6
-      bg-gradient-to-br from-[#eef2ff] via-[#f5f3ff] to-[#ffe4f5]
-    `}
+        ${dashboardVisible ? "app-screen-enter" : "opacity-0"}
+        flex h-screen w-screen overflow-hidden px-6 py-6 gap-6
+        bg-gradient-to-br from-[#eef2ff] via-[#f5f3ff] to-[#ffe4f5]
+      `}
     >
       <Sidebar current={page} onChange={setPage} onLogout={handleLogout} />
 
-      {/* ⭐ Artık main scroll DEĞİL, içindeki view div’leri scroll oluyor */}
-      <main
-        className="
-          flex-1 overflow-hidden
-          rounded-[32px]
-          bg-white/12 backdrop-blur-xl
-          border border-white/35 shadow-[0_12px_30px_rgba(15,23,42,0.30)]
-          p-8 relative
-        "
-      >
-        {/* DASHBOARD VIEW */}
+      <main className="flex-1 overflow-hidden rounded-[32px] bg-white/12 backdrop-blur-xl border border-white/35 shadow-[0_12px_30px_rgba(15,23,42,0.30)] p-8 relative">
         {showDashboard && (
           <div
             ref={dashScrollRef}
-            className={`
-              absolute inset-0
-              overflow-y-auto
-              transition-all duration-200
-              ${
-                page === "dashboard"
-                  ? "opacity-100 translate-y-0 pointer-events-auto"
-                  : "opacity-0 translate-y-2 pointer-events-none"
-              }
-            `}
+            className={`absolute inset-0 overflow-y-auto transition-all duration-200 ${
+              page === "dashboard"
+                ? "opacity-100 pointer-events-auto"
+                : "opacity-0 pointer-events-none"
+            }`}
           >
             <DashboardView trades={trades} stats={stats} />
           </div>
         )}
 
-        {/* JOURNAL VIEW */}
         {showDashboard && (
           <div
             ref={journalScrollRef}
-            className={`
-              absolute inset-0
-              overflow-y-auto
-              transition-all duration-200
-              ${
-                page === "journal"
-                  ? "opacity-100 translate-y-0 pointer-events-auto"
-                  : "opacity-0 translate-y-2 pointer-events-none"
-              }
-            `}
+            className={`absolute inset-0 overflow-y-auto transition-all duration-200 ${
+              page === "journal"
+                ? "opacity-100 pointer-events-auto"
+                : "opacity-0 pointer-events-none"
+            }`}
           >
             <JournalView
               trades={trades}
