@@ -1,12 +1,13 @@
 import "./App.css";
 import React, { useState, useEffect, useMemo, useCallback, useRef } from "react";
-
 import SplashScreen from "./components/SplashScreen";
 import LoginScreen from "./components/LoginScreen";
 import { Sidebar } from "./components/Sidebar";
 import { DashboardView } from "./components/DashboardView";
 import JournalView from "./components/JournalView";
 import type { Trade } from "./types";
+import { getTrades, addTrade, deleteTrade } from "./lib/trades";
+
 
 function App() {
   const [stage, setStage] = useState<"splash" | "login" | "app">("splash");
@@ -20,39 +21,27 @@ function App() {
   const dashScrollRef = useRef<HTMLDivElement>(null);
   const journalScrollRef = useRef<HTMLDivElement>(null);
 
-  // DEMO TRADES
-  const [trades, setTrades] = useState<Trade[]>([
-    {
-      id: 1,
-      date: "2025-12-01",
-      pair: "EURUSD",
-      direction: "Long",
-      session: "London",
-      strategy: "FVG",
-      risk: 50,
-      resultR: 2,
-      resultUsd: 100,
-    },
-    {
-      id: 2,
-      date: "2025-12-02",
-      pair: "GBPUSD",
-      direction: "Short",
-      session: "NY",
-      strategy: "Breakout",
-      risk: 50,
-      resultR: -1,
-      resultUsd: -50,
-    },
-  ]);
+  const [trades, setTrades] = useState<Trade[]>([]);
+  
+  useEffect(() => {
+  getTrades()
+    .then(setTrades)
+    .catch(console.error);
+}, []);
 
-  const handleAddTrade = useCallback((t: Omit<Trade, "id">) => {
-    setTrades((prev) => [...prev, { id: Date.now(), ...t }]);
-  }, []);
 
-  const handleDeleteTrade = useCallback((id: number) => {
-    setTrades((prev) => prev.filter((x) => x.id !== id));
-  }, []);
+
+  const handleAddTrade = useCallback(async (t: Omit<Trade, "id">) => {
+  const saved = await addTrade(t);
+  setTrades((prev) => [...prev, saved]);
+}, []);
+
+
+  const handleDeleteTrade = useCallback(async (id: string) => {
+  await deleteTrade(id);
+  setTrades((prev) => prev.filter((x) => x.id !== id));
+}, []);
+
 
   const stats = useMemo(() => {
     const total = trades.length;

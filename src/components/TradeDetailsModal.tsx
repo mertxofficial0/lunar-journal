@@ -6,7 +6,7 @@ import Modal from "./ui/Modal";
 type Props = {
   trade: Trade | null;
   onClose: () => void;
-  onDelete: (id: number) => void;
+  onDelete: (id: string) => void;
 };
 
 export default function TradeDetailsModal({

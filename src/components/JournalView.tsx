@@ -18,7 +18,7 @@ type JournalProps = {
   trades: Trade[];
   stats: Stats;
   onAddTrade: (trade: Omit<Trade, "id">) => void;
-  onDeleteTrade: (id: number) => void; // ⭐
+  onDeleteTrade: (id: string) => void; // ⭐
 };
 
 export default function JournalView({

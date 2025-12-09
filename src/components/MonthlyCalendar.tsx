@@ -15,6 +15,19 @@ type DayData = {
 };
 
 export default function MonthlyCalendar({ days }: { days: DayData[] }) {
+    if (!days.length) {
+    return (
+      <div className="rounded-3xl bg-white/70 backdrop-blur-xl shadow-xl p-6 mt-10">
+        <h2 className="text-lg font-semibold text-slate-700 mb-4">
+          No data yet
+        </h2>
+        <p className="text-sm text-slate-500">
+          Add your first trade to see calendar statistics.
+        </p>
+      </div>
+    );
+  }
+
   const monthDate = new Date(days[0]?.date);
   const monthStart = startOfMonth(monthDate);
   const monthEnd = endOfMonth(monthStart);

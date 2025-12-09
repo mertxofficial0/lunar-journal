@@ -1,5 +1,5 @@
 export type Trade = {
-  id: number;
+  id: string;
   date: string;
   pair: string;
   direction: "Long" | "Short";
