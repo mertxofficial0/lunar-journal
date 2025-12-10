@@ -9,7 +9,7 @@ type LoginScreenProps = {
 };
 
 export default function LoginScreen({ onSuccess, initialMode, onBack }: LoginScreenProps) {
-  const [mode, setMode] = useState<"login" | "register">(initialMode ?? "login");
+  const [mode] = useState<"login" | "register">(initialMode ?? "login");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState(""); // ✅ Confirm password
@@ -67,28 +67,23 @@ export default function LoginScreen({ onSuccess, initialMode, onBack }: LoginScr
 
         {/* ✅ Geri tuşu */}
         {onBack && (
-  <button
-    type="button"
-    onClick={onBack}
-    className="
-      absolute top-4 left-4
-      flex items-center gap-1 px-4 py-2
-      rounded-2xl
-      bg-white/40
-      text-slate-700 font-medium
-      backdrop-blur-xl
-      shadow-[0_8px_22px_rgba(15,23,42,0.18)]
-      hover:bg-white/60
-      transition
-    "
-  > Geri
-    
-  </button>
-)}
-
-
-
-
+          <button
+            type="button"
+            onClick={onBack}
+            className="
+              absolute top-4 left-4
+              flex items-center gap-1 px-4 py-2
+              rounded-2xl
+              bg-white/40
+              text-slate-700 font-medium
+              backdrop-blur-xl
+              shadow-[0_8px_22px_rgba(15,23,42,0.18)]
+              hover:bg-white/60
+              transition
+            "
+          > Geri
+          </button>
+        )}
 
         {/* LOGO */}
         <div className="relative w-20 h-20 mb-4">
@@ -175,8 +170,6 @@ export default function LoginScreen({ onSuccess, initialMode, onBack }: LoginScr
             ) : mode === "login" ? "Login" : "Create Account"}
           </button>
         </form>
-
-        
       </div>
     </div>
   );

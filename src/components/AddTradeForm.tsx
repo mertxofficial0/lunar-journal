@@ -5,14 +5,15 @@ import Modal from "./ui/Modal";
 import Input from "./ui/Input";
 import DateInput from "./ui/DateInput";
 import TextArea from "./ui/TextArea";
-import type { Trade } from "../types";
+import type { Trade, NewTrade } from "../types";
 
 
 type AddTradeFormProps = {
   isOpen: boolean;
   onClose: () => void;
-  onAdd: (trade: Omit<Trade, "id">) => void;
+  onAdd: (trade: NewTrade) => void;
 };
+
 
 export default function AddTradeForm({ isOpen, onClose, onAdd }: AddTradeFormProps) {
   // FORM STATE
@@ -54,19 +55,21 @@ export default function AddTradeForm({ isOpen, onClose, onAdd }: AddTradeFormPro
     if (!date) return;
 
     onAdd({
-      date,
-      pair,
-      direction,
-      session,
-      strategy,
-      risk,
-      resultUsd,
-      resultR,
-      setupTag,
-      mood,
-      screenshotUrl,
-      notes,
-    });
+  date,
+  pair,
+  direction,
+  session,
+  strategy,
+  risk,
+  resultUsd,
+  resultR,
+  setupTag,
+  mood,
+  screenshotUrl,
+  notes,
+});
+
+
 
     reset();
     onClose();

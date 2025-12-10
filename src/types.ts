@@ -9,9 +9,12 @@ export type Trade = {
   resultR: number;
   resultUsd: number;
 
-  // 🔹 Yeni alanlar (hepsi opsiyonel)
-  setupTag?: string; // ör: "FVG", "Sweep", "Breakout"
+  setupTag?: string;
   mood?: "Calm" | "Focused" | "Tilted" | "Revenge" | "Fearful";
   screenshotUrl?: string;
   notes?: string;
+
+  user_id: string;
 };
+
+export type NewTrade = Omit<Trade, "id" | "user_id">;

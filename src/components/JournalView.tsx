@@ -1,5 +1,5 @@
 import { useState } from "react";
-import type { Trade } from "../types";
+import type { Trade, NewTrade } from "../types";
 import AddTradeForm from "./AddTradeForm";
 import TradeDetailsModal from "./TradeDetailsModal";
 
@@ -17,9 +17,10 @@ type Stats = {
 type JournalProps = {
   trades: Trade[];
   stats: Stats;
-  onAddTrade: (trade: Omit<Trade, "id">) => void;
-  onDeleteTrade: (id: string) => void; // ⭐
+  onAddTrade: (trade: NewTrade) => void;
+  onDeleteTrade: (id: string) => void;
 };
+
 
 export default function JournalView({
   trades,
