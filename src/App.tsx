@@ -11,9 +11,7 @@ import type { Trade } from "./types";
 import { getTrades, addTrade, deleteTrade } from "./lib/trades";
 import { supabase } from "./lib/supabase";
 
-/* =========================
-   ✅ DB → UI SAFE MAPPER
-========================= */
+/* DB → UI MAPPER */
 const mapDbTradeToTrade = (db: any): Trade => ({
   id: db.id,
   date: db.date,
@@ -35,10 +33,10 @@ function App() {
   const [loginMode, setLoginMode] = useState<"login" | "register">("login");
   const [page, setPage] = useState<"dashboard" | "journal">("dashboard");
 
-  // ✅ AUTH STATE
-  const [session, setSession] = useState<Session | null>(null);
+  // AUTH STATE
+  const [_session, setSession] = useState<Session | null>(null);
   const [user, setUser] = useState<User | null>(null);
-  const [authReady, setAuthReady] = useState(false);
+  const [_authReady, setAuthReady] = useState(false);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => {
@@ -66,84 +64,50 @@ function App() {
 
   const [trades, setTrades] = useState<Trade[]>([]);
 
-  /* =========================
-     ✅ INITIAL LOAD (DB) - USER BAZLI
-  ========================= */
+  /* INITIAL LOAD */
   useEffect(() => {
     if (!user) return;
-
-    getTrades(user.id)
-      .then(setTrades)
-      .catch(console.error);
+    getTrades(user.id).then(setTrades).catch(console.error);
   }, [user]);
 
-  /* =========================
-     ✅ REALTIME SYNC - USER BAZLI
-  ========================= */
+  /* REALTIME SYNC */
   useEffect(() => {
     if (!user) return;
 
     const channel = supabase
       .channel("trades-realtime")
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "trades" },
-        (payload) => {
-          if (payload.new?.user_id !== user.id) return;
+      .on("postgres_changes", { event: "*", schema: "public", table: "trades" }, (payload) => {
+        if (payload.new?.user_id !== user.id) return;
 
-          if (payload.eventType === "INSERT") {
-            setTrades((prev) => [mapDbTradeToTrade(payload.new), ...prev]);
-          }
-
-          if (payload.eventType === "UPDATE") {
-            setTrades((prev) =>
-              prev.map((t) =>
-                t.id === payload.new.id ? mapDbTradeToTrade(payload.new) : t
-              )
-            );
-          }
-
-          if (payload.eventType === "DELETE") {
-            setTrades((prev) => prev.filter((t) => t.id !== payload.old.id));
-          }
-        }
-      )
+        if (payload.eventType === "INSERT") setTrades((prev) => [mapDbTradeToTrade(payload.new), ...prev]);
+        if (payload.eventType === "UPDATE")
+          setTrades((prev) => prev.map((t) => (t.id === payload.new.id ? mapDbTradeToTrade(payload.new) : t)));
+        if (payload.eventType === "DELETE")
+          setTrades((prev) => prev.filter((t) => t.id !== payload.old.id));
+      })
       .subscribe();
 
     return () => supabase.removeChannel(channel);
   }, [user]);
 
-  /* =========================
-     ✅ ADD / DELETE
-  ========================= */
+  /* ADD / DELETE */
   const handleAddTrade = useCallback(
-  async (t: Omit<Trade, "id">) => {
-    if (!user) return; // kullanıcı yoksa ekleme yapma
-
-    try {
-      const newTrade = await addTrade({
-        ...t,
-        user_id: user.id // ✅ user bazlı ekleme
-      });
-      
-    } catch (err) {
-      console.error("Trade ekleme hatası:", err);
-    }
-  },
-  [user]
-);
-
-
-  const handleDeleteTrade = useCallback(
-    async (id: string) => {
-      await deleteTrade(id);
+    async (t: Omit<Trade, "id">) => {
+      if (!user) return;
+      try {
+        await addTrade({ ...t, user_id: user.id });
+      } catch (err) {
+        console.error("Trade ekleme hatası:", err);
+      }
     },
-    []
+    [user]
   );
 
-  /* =========================
-     ✅ STATS (SAFE)
-  ========================= */
+  const handleDeleteTrade = useCallback(async (id: string) => {
+    await deleteTrade(id);
+  }, []);
+
+  /* STATS */
   const stats = useMemo(() => {
     const total = trades.length;
     const wins = trades.filter((t) => t.resultUsd > 0).length;
@@ -159,29 +123,17 @@ function App() {
       totalR,
       winrate: total ? (wins / total) * 100 : 0,
       avgR: total ? totalR / total : 0,
-      profitFactor:
-        losses === 0
-          ? wins
-          : Math.abs(
-              trades
-                .filter((t) => t.resultUsd > 0)
-                .reduce((a, b) => a + b.resultUsd, 0) /
-                trades
-                  .filter((t) => t.resultUsd < 0)
-                  .reduce((a, b) => a + b.resultUsd, 0)
-            ),
+      profitFactor: losses === 0 ? wins : Math.abs(
+        trades.filter((t) => t.resultUsd > 0).reduce((a, b) => a + b.resultUsd, 0) /
+        trades.filter((t) => t.resultUsd < 0).reduce((a, b) => a + b.resultUsd, 0)
+      ),
     };
   }, [trades]);
 
-  /* =========================
-     UI FLOW (AYNI)
-  ========================= */
+  /* UI FLOW */
   useEffect(() => {
     if (stage === "login") {
-      const t = setTimeout(() => {
-        setPreloadDashboard(true);
-        setDashboardReady(true);
-      }, 150);
+      const t = setTimeout(() => { setPreloadDashboard(true); setDashboardReady(true); }, 150);
       return () => clearTimeout(t);
     } else {
       setPreloadDashboard(false);
@@ -204,104 +156,43 @@ function App() {
     if (page === "journal" && journalScrollRef.current) journalScrollRef.current.scrollTop = 0;
   }, [page]);
 
+  /* LOGOUT */
   const handleLogout = async () => {
-  try {
-    await supabase.auth.signOut(); // Supabase oturumunu kapat
-  } catch (error) {
-    console.error("Logout hatası:", error);
-  }
+    try { await supabase.auth.signOut(); } catch (err) { console.error(err); }
+    setUser(null);
+    setStage("landing");
+  };
 
-  // Direkt landing ekranına dön
-  setUser(null);
-  setSession(null);
-  setStage("landing");
-};
+  /* RENDER */
+  if (stage === "landing") return <Landing onLogin={(mode) => { setLoginMode(mode ?? "login"); setStage("login"); }} />;
 
-
-
-
-  /* =========================
-     RENDER
-  ========================= */
-  if (stage === "landing") {
-    return (
-      <Landing
-        onLogin={(mode) => {
-          setLoginMode(mode ?? "login");
-          setStage("login");
-        }}
-      />
-    );
-  }
-
-  if (stage === "login") {
-    return (
-      <>
-        <LoginScreen
-  onSuccess={() => setStage("app")}
-  dashboardReady={dashboardReady}
-  initialMode={loginMode}
-  onBack={() => setStage("landing")} // ✅ geri tuşu callback
-/>
-
-
-        {preloadDashboard && (
-          <div className="opacity-0 pointer-events-none absolute inset-0 h-0 overflow-hidden">
-            <Sidebar current={page} onChange={() => {}} onLogout={() => {}} />
-            <DashboardView trades={trades} stats={stats} />
-            <JournalView
-              trades={trades}
-              stats={stats}
-              onAddTrade={handleAddTrade}
-              onDeleteTrade={handleDeleteTrade}
-            />
-          </div>
-        )}
-      </>
-    );
-  }
+  if (stage === "login") return (
+    <>
+      <LoginScreen onSuccess={() => setStage("app")} dashboardReady={dashboardReady} initialMode={loginMode} onBack={() => setStage("landing")} />
+      {preloadDashboard && (
+        <div className="opacity-0 pointer-events-none absolute inset-0 h-0 overflow-hidden">
+          <Sidebar current={page} onChange={() => {}} onLogout={() => {}} />
+          <DashboardView trades={trades} stats={stats} />
+          <JournalView trades={trades} stats={stats} onAddTrade={handleAddTrade} onDeleteTrade={handleDeleteTrade} />
+        </div>
+      )}
+    </>
+  );
 
   const showDashboard = stage === "app" || preloadDashboard;
 
   return (
-    <div
-      className={`
-        ${dashboardVisible ? "app-screen-enter" : "opacity-0"}
-        flex h-screen w-screen overflow-hidden px-6 py-6 gap-6
-        bg-gradient-to-br from-[#eef2ff] via-[#f5f3ff] to-[#ffe4f5]
-      `}
-    >
+    <div className={`${dashboardVisible ? "app-screen-enter" : "opacity-0"} flex h-screen w-screen overflow-hidden px-6 py-6 gap-6 bg-gradient-to-br from-[#eef2ff] via-[#f5f3ff] to-[#ffe4f5]`}>
       <Sidebar current={page} onChange={setPage} onLogout={handleLogout} />
-
       <main className="flex-1 overflow-hidden rounded-[32px] bg-white/12 backdrop-blur-xl border border-white/35 shadow-[0_12px_30px_rgba(15,23,42,0.30)] p-8 relative">
         {showDashboard && (
-          <div
-            ref={dashScrollRef}
-            className={`absolute inset-0 overflow-y-auto transition-all duration-200 ${
-              page === "dashboard"
-                ? "opacity-100 pointer-events-auto"
-                : "opacity-0 pointer-events-none"
-            }`}
-          >
+          <div ref={dashScrollRef} className={`absolute inset-0 overflow-y-auto transition-all duration-200 ${page === "dashboard" ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"}`}>
             <DashboardView trades={trades} stats={stats} />
           </div>
         )}
-
         {showDashboard && (
-          <div
-            ref={journalScrollRef}
-            className={`absolute inset-0 overflow-y-auto transition-all duration-200 ${
-              page === "journal"
-                ? "opacity-100 pointer-events-auto"
-                : "opacity-0 pointer-events-none"
-            }`}
-          >
-            <JournalView
-              trades={trades}
-              stats={stats}
-              onAddTrade={handleAddTrade}
-              onDeleteTrade={handleDeleteTrade}
-            />
+          <div ref={journalScrollRef} className={`absolute inset-0 overflow-y-auto transition-all duration-200 ${page === "journal" ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"}`}>
+            <JournalView trades={trades} stats={stats} onAddTrade={handleAddTrade} onDeleteTrade={handleDeleteTrade} />
           </div>
         )}
       </main>

@@ -16,12 +16,12 @@ const fromDb = (row: any): Trade => ({
   mood: row.mood ?? undefined,
   screenshotUrl: row.screenshot_url ?? undefined,
   notes: row.notes ?? undefined,
-  user_id: row.user_id, // user_id ekledik
+  user_id: row.user_id, // ✅ user_id eklendi
 });
 
 // UI → DB (camelCase → snake_case)
 const toDb = (trade: Omit<Trade, "id"> & { user_id: string }) => ({
-  user_id: trade.user_id,       // ✅ Burayı ekledik
+  user_id: trade.user_id, // ✅ Burayı ekledik
   date: trade.date,
   pair: trade.pair,
   direction: trade.direction,
