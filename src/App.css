@@ -306,3 +306,233 @@ html {
 .animate-confirm-exit {
   animation: confirmExit 0.16s ease-in forwards;
 }
+/* ==========================================================
+   🌙 LUNAR SPLASH — SLIDE IN / SLIDE OUT
+========================================================== */
+
+.lunar-splash-root {
+  position: fixed;
+  inset: 0;
+  background: linear-gradient(
+    135deg,
+    #eef2ff,
+    #f5f3ff,
+    #ffe4f5
+  );
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+
+  animation: splashRootFade 5.5s ease forwards;
+}
+
+/* ---------------- CARD ---------------- */
+
+.lunar-splash-card {
+  width: 360px;
+  padding: 34px 26px 38px;
+  border-radius: 28px;
+
+  background: rgba(255, 255, 255, 0.72);
+  border: 1px solid rgba(255, 255, 255, 0.75);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+
+  box-shadow:
+    0 22px 55px rgba(15, 23, 42, 0.22),
+    inset 0 1px 0 rgba(255,255,255,0.65);
+
+  text-align: center;
+
+  /* 👇 GİRİŞ + ÇIKIŞ */
+  animation:
+    lunarCardIn 0.9s cubic-bezier(0.22, 1, 0.36, 1) forwards,
+    lunarCardOut 0.7s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  animation-delay:
+    0s,
+    4.6s; /* splash süresinin sonunda */
+}
+
+/* ---------------- TEXT ---------------- */
+
+.lunar-splash-title {
+  font-family: "Inter", -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: 40px;
+  font-weight: 500;
+  letter-spacing: 0.22em;
+  color: #0f172a;
+}
+
+.lunar-splash-sub {
+  margin-top: 10px;
+  font-size: 13px;
+  letter-spacing: 0.08em;
+  color: #64748b;
+}
+
+/* ---------------- LOADER ---------------- */
+
+.lunar-loader {
+  position: relative;
+  width: 42px;
+  height: 42px;
+  margin: 28px auto 0;
+}
+
+.lunar-loader span {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 2px solid rgba(99, 102, 241, 0.25);
+  border-top-color: #6366f1;
+  animation: lunarSpin 1s linear infinite;
+}
+
+/* ---------------- ANIMATIONS ---------------- */
+
+@keyframes lunarSpin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+/* 👇 FAST SMOOTH FADE IN (AŞAĞIDAN) */
+@keyframes lunarCardIn {
+  0% {
+    opacity: 0;
+    transform: translateY(40px) scale(0.96);
+    filter: blur(6px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+  }
+}
+
+/* 👆 TERSTEN FADE OUT (AŞAĞI DOĞRU) */
+@keyframes lunarCardOut {
+  0% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(40px) scale(0.96);
+    filter: blur(6px);
+  }
+}
+
+/* ROOT FADE */
+@keyframes splashRootFade {
+  0%, 85% { opacity: 1; }
+  100%    { opacity: 0; }
+}
+/* ==========================================================
+   🔵 ORTAK ANİMASYONLAR (Login ile aynı)
+========================================================== */
+
+/* Enter → aşağıdan yukarı */
+.splash-enter {
+  animation: splashFadeIn 0.8s cubic-bezier(0.22,1,0.36,1) forwards;
+}
+
+@keyframes splashFadeIn {
+  0% {
+    opacity: 0;
+    transform: translateY(40px) scale(0.97);
+    filter: blur(6px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+  }
+}
+
+/* Exit → yukarıdan aşağı */
+.splash-exit {
+  animation: splashFadeOut 0.6s cubic-bezier(0.22,1,0.36,1) forwards;
+}
+
+@keyframes splashFadeOut {
+  0% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(40px) scale(0.97);
+    filter: blur(6px);
+  }
+}
+
+/* Yüklenirken dönen loader */
+.splash-spinner {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  border: 3px solid rgba(99,102,241,0.25);
+  border-top-color: #6366f1;
+  animation: spinner 1s linear infinite;
+}
+
+@keyframes spinner {
+  to { transform: rotate(360deg); }
+}
+/* ==========================================================
+   🔵 SPLASH KARTININ GİRİŞ / ÇIKIŞ ANİMASYONLARI
+   (Login ekranındaki animasyonlarla birebir uyumlu)
+========================================================== */
+
+/* ENTER → aşağıdan yukarı yumuşak fade-in */
+.splash-card-enter {
+  animation: splashCardEnter 0.65s cubic-bezier(0.22,1,0.36,1) forwards;
+}
+
+@keyframes splashCardEnter {
+  0% {
+    opacity: 0;
+    transform: translateY(40px) scale(0.97);
+    filter: blur(6px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+  }
+}
+
+/* EXIT → yukarıdan aşağı fade-out */
+.splash-card-exit {
+  animation: splashCardExit 0.55s cubic-bezier(0.22,1,0.36,1) forwards;
+}
+
+@keyframes splashCardExit {
+  0% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+  }
+  100% {
+    opacity: 0;
+    transform: translateY(40px) scale(0.97);
+    filter: blur(6px);
+  }
+}
+
+/* Spinner – modern, pastel uyumlu */
+.splash-spinner {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  border: 3px solid rgba(99,102,241,0.25);
+  border-top-color: #6366f1; /* Indigo accent */
+  animation: spinnerRotate 0.9s linear infinite;
+}
+
+@keyframes spinnerRotate {
+  to { transform: rotate(360deg); }
+}

@@ -1,18 +1,12 @@
 import "./App.css";
-import React, {
-  useState,
-  useEffect,
-  useMemo,
-  useCallback,
-  useRef,
-} from "react";
+import React, { useState, useEffect, useMemo, useCallback, useRef } from "react";
 
-import SplashScreen from "./components/SplashScreen";
+import Landing from "./components/Landing";
 import LoginScreen from "./components/LoginScreen";
 import { Sidebar } from "./components/Sidebar";
 import { DashboardView } from "./components/DashboardView";
 import JournalView from "./components/JournalView";
-
+import type { Session, User } from "@supabase/supabase-js";
 import type { Trade } from "./types";
 import { getTrades, addTrade, deleteTrade } from "./lib/trades";
 import { supabase } from "./lib/supabase";
@@ -37,8 +31,31 @@ const mapDbTradeToTrade = (db: any): Trade => ({
 });
 
 function App() {
-  const [stage, setStage] = useState<"splash" | "login" | "app">("splash");
+  const [stage, setStage] = useState<"landing" | "login" | "app">("login");
+  const [loginMode, setLoginMode] = useState<"login" | "register">("login");
   const [page, setPage] = useState<"dashboard" | "journal">("dashboard");
+
+  // ✅ AUTH STATE
+  const [session, setSession] = useState<Session | null>(null);
+  const [user, setUser] = useState<User | null>(null);
+  const [authReady, setAuthReady] = useState(false);
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => {
+      setSession(data.session);
+      setUser(data.session?.user ?? null);
+      setStage(data.session ? "app" : "landing");
+      setAuthReady(true);
+    });
+
+    const { data: listener } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+      setUser(session?.user ?? null);
+      setStage(session ? "app" : "landing");
+    });
+
+    return () => listener.subscription.unsubscribe();
+  }, []);
 
   const [preloadDashboard, setPreloadDashboard] = useState(false);
   const [dashboardVisible, setDashboardVisible] = useState(false);
@@ -50,68 +67,76 @@ function App() {
   const [trades, setTrades] = useState<Trade[]>([]);
 
   /* =========================
-     ✅ INITIAL LOAD (DB)
+     ✅ INITIAL LOAD (DB) - USER BAZLI
   ========================= */
   useEffect(() => {
-    getTrades()
+    if (!user) return;
+
+    getTrades(user.id)
       .then(setTrades)
       .catch(console.error);
-  }, []);
+  }, [user]);
 
   /* =========================
-     ✅ REALTIME SYNC
+     ✅ REALTIME SYNC - USER BAZLI
   ========================= */
   useEffect(() => {
+    if (!user) return;
+
     const channel = supabase
       .channel("trades-realtime")
       .on(
         "postgres_changes",
         { event: "*", schema: "public", table: "trades" },
         (payload) => {
+          if (payload.new?.user_id !== user.id) return;
+
           if (payload.eventType === "INSERT") {
-            setTrades((prev) => [
-              mapDbTradeToTrade(payload.new),
-              ...prev,
-            ]);
+            setTrades((prev) => [mapDbTradeToTrade(payload.new), ...prev]);
           }
 
           if (payload.eventType === "UPDATE") {
             setTrades((prev) =>
               prev.map((t) =>
-                t.id === payload.new.id
-                  ? mapDbTradeToTrade(payload.new)
-                  : t
+                t.id === payload.new.id ? mapDbTradeToTrade(payload.new) : t
               )
             );
           }
 
           if (payload.eventType === "DELETE") {
-            setTrades((prev) =>
-              prev.filter((t) => t.id !== payload.old.id)
-            );
+            setTrades((prev) => prev.filter((t) => t.id !== payload.old.id));
           }
         }
       )
       .subscribe();
 
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, []);
+    return () => supabase.removeChannel(channel);
+  }, [user]);
 
   /* =========================
      ✅ ADD / DELETE
   ========================= */
   const handleAddTrade = useCallback(
-    async (t: Omit<Trade, "id">) => {
-      await addTrade(t); // realtime ekleyecek
-    },
-    []
-  );
+  async (t: Omit<Trade, "id">) => {
+    if (!user) return; // kullanıcı yoksa ekleme yapma
+
+    try {
+      const newTrade = await addTrade({
+        ...t,
+        user_id: user.id // ✅ user bazlı ekleme
+      });
+      
+    } catch (err) {
+      console.error("Trade ekleme hatası:", err);
+    }
+  },
+  [user]
+);
+
 
   const handleDeleteTrade = useCallback(
     async (id: string) => {
-      await deleteTrade(id); // realtime silecek
+      await deleteTrade(id);
     },
     []
   );
@@ -152,11 +177,6 @@ function App() {
      UI FLOW (AYNI)
   ========================= */
   useEffect(() => {
-    const t = setTimeout(() => setStage("login"), 4000);
-    return () => clearTimeout(t);
-  }, []);
-
-  useEffect(() => {
     if (stage === "login") {
       const t = setTimeout(() => {
         setPreloadDashboard(true);
@@ -180,31 +200,50 @@ function App() {
   }, [stage]);
 
   useEffect(() => {
-    if (page === "dashboard" && dashScrollRef.current) {
-      dashScrollRef.current.scrollTop = 0;
-    }
-    if (page === "journal" && journalScrollRef.current) {
-      journalScrollRef.current.scrollTop = 0;
-    }
+    if (page === "dashboard" && dashScrollRef.current) dashScrollRef.current.scrollTop = 0;
+    if (page === "journal" && journalScrollRef.current) journalScrollRef.current.scrollTop = 0;
   }, [page]);
 
-  const handleLogout = () => {
-    document.body.classList.add("logout-fade");
-    setTimeout(() => {
-      setStage("login");
-      document.body.classList.remove("logout-fade");
-    }, 1500);
-  };
+  const handleLogout = async () => {
+  try {
+    await supabase.auth.signOut(); // Supabase oturumunu kapat
+  } catch (error) {
+    console.error("Logout hatası:", error);
+  }
 
-  if (stage === "splash") return <SplashScreen />;
+  // Direkt landing ekranına dön
+  setUser(null);
+  setSession(null);
+  setStage("landing");
+};
+
+
+
+
+  /* =========================
+     RENDER
+  ========================= */
+  if (stage === "landing") {
+    return (
+      <Landing
+        onLogin={(mode) => {
+          setLoginMode(mode ?? "login");
+          setStage("login");
+        }}
+      />
+    );
+  }
 
   if (stage === "login") {
     return (
       <>
         <LoginScreen
-          onSuccess={() => setStage("app")}
-          dashboardReady={dashboardReady}
-        />
+  onSuccess={() => setStage("app")}
+  dashboardReady={dashboardReady}
+  initialMode={loginMode}
+  onBack={() => setStage("landing")} // ✅ geri tuşu callback
+/>
+
 
         {preloadDashboard && (
           <div className="opacity-0 pointer-events-none absolute inset-0 h-0 overflow-hidden">

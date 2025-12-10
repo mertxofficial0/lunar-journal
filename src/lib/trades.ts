@@ -16,10 +16,12 @@ const fromDb = (row: any): Trade => ({
   mood: row.mood ?? undefined,
   screenshotUrl: row.screenshot_url ?? undefined,
   notes: row.notes ?? undefined,
+  user_id: row.user_id, // user_id ekledik
 });
 
 // UI → DB (camelCase → snake_case)
-const toDb = (trade: Omit<Trade, "id">) => ({
+const toDb = (trade: Omit<Trade, "id"> & { user_id: string }) => ({
+  user_id: trade.user_id,       // ✅ Burayı ekledik
   date: trade.date,
   pair: trade.pair,
   direction: trade.direction,
@@ -34,17 +36,20 @@ const toDb = (trade: Omit<Trade, "id">) => ({
   notes: trade.notes ?? null,
 });
 
-export async function getTrades(): Promise<Trade[]> {
+export async function getTrades(user_id: string): Promise<Trade[]> {
   const { data, error } = await supabase
     .from("trades")
     .select("*")
+    .eq("user_id", user_id)
     .order("date", { ascending: true });
 
   if (error) throw error;
   return data.map(fromDb);
 }
 
-export async function addTrade(trade: Omit<Trade, "id">): Promise<Trade> {
+export async function addTrade(
+  trade: Omit<Trade, "id" | "user_id"> & { user_id: string }
+): Promise<Trade> {
   const { data, error } = await supabase
     .from("trades")
     .insert(toDb(trade))
