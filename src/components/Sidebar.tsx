@@ -4,10 +4,15 @@ type SidebarProps = {
   current: "dashboard" | "journal";
   onChange: (page: "dashboard" | "journal") => void;
   onLogout: () => void;
+  loggingOut?: boolean; // ✅ yeni
 };
 
-export function Sidebar({ current, onChange, onLogout }: SidebarProps) {
-
+export function Sidebar({
+  current,
+  onChange,
+  onLogout,
+  loggingOut = false,
+}: SidebarProps) {
   return (
     <aside className="h-full w-64 flex-shrink-0">
       <div
@@ -29,7 +34,6 @@ export function Sidebar({ current, onChange, onLogout }: SidebarProps) {
         />
 
         <div className="relative z-10 flex h-full flex-col px-5 pt-5 pb-6 text-slate-800">
-          
           {/* LOGO */}
           <div className="flex items-center gap-3 mb-8">
             <div
@@ -42,7 +46,13 @@ export function Sidebar({ current, onChange, onLogout }: SidebarProps) {
             >
               <svg viewBox="0 0 200 200" className="w-8 h-8">
                 <defs>
-                  <linearGradient id="lunarSidebarLogo" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <linearGradient
+                    id="lunarSidebarLogo"
+                    x1="0%"
+                    y1="0%"
+                    x2="100%"
+                    y2="100%"
+                  >
                     <stop offset="0%" stopColor="#e0e7ff" />
                     <stop offset="45%" stopColor="#a5b4fc" />
                     <stop offset="100%" stopColor="#fb7185" />
@@ -50,11 +60,7 @@ export function Sidebar({ current, onChange, onLogout }: SidebarProps) {
                 </defs>
                 <circle cx="100" cy="100" r="80" fill="url(#lunarSidebarLogo)" />
                 <path
-                  d="
-                    M120 45
-                    A55 55 0 1 0 120 155
-                    A42 60 0 1 1 120 45
-                  "
+                  d="M120 45 A55 55 0 1 0 120 155 A42 60 0 1 1 120 45"
                   fill="#f9fafbcc"
                 />
               </svg>
@@ -67,7 +73,9 @@ export function Sidebar({ current, onChange, onLogout }: SidebarProps) {
               <span className="text-sm font-semibold leading-tight text-slate-900">
                 Lunar Journal
               </span>
-              <span className="text-[11px] text-slate-500">Trading Dashboard</span>
+              <span className="text-[11px] text-slate-500">
+                Trading Dashboard
+              </span>
             </div>
           </div>
 
@@ -95,27 +103,41 @@ export function Sidebar({ current, onChange, onLogout }: SidebarProps) {
             </div>
             <p>
               Kurallı trade fonu kurtarır.{" "}
-              <span className="font-semibold text-rose-500">Revenge trade öldürür.</span>
+              <span className="font-semibold text-rose-500">
+                Revenge trade öldürür.
+              </span>
             </p>
           </div>
 
           {/* LOGOUT */}
           <button
             onClick={onLogout}
-            className="
+            disabled={loggingOut}
+            className={`
               mt-3 w-full py-2.5
               rounded-2xl text-sm font-medium
               bg-white/40 backdrop-blur-xl
               border border-white/50
-              hover:bg-white/70
               text-slate-700
               shadow-[0_8px_22px_rgba(15,23,42,0.18)]
               transition
-            "
+              flex items-center justify-center gap-2
+              ${
+                loggingOut
+                  ? "opacity-70 cursor-not-allowed"
+                  : "hover:bg-white/70"
+              }
+            `}
           >
-            Çıkış Yap
+            {loggingOut ? (
+              <>
+                <span className="w-4 h-4 border-2 border-slate-400/40 border-t-slate-600 rounded-full animate-spin" />
+                Çıkış yapılıyor…
+              </>
+            ) : (
+              "Çıkış Yap"
+            )}
           </button>
-
         </div>
       </div>
     </aside>
@@ -147,7 +169,11 @@ function SidebarItem({ label, active, onClick }: SidebarItemProps) {
       <span
         className={`
           h-2.5 w-2.5 rounded-full
-          ${active ? "bg-emerald-400 shadow-[0_0_0_4px_rgba(34,197,94,0.45)]" : "bg-slate-300"}
+          ${
+            active
+              ? "bg-emerald-400 shadow-[0_0_0_4px_rgba(34,197,94,0.45)]"
+              : "bg-slate-300"
+          }
         `}
       />
     </button>

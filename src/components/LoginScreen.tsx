@@ -18,35 +18,46 @@ export default function LoginScreen({ onSuccess, initialMode, onBack }: LoginScr
   const [exiting, setExiting] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (loading) return;
+  e.preventDefault();
+  if (loading) return;
 
-    setLoading(true);
-    setError("");
+  setLoading(true);
+  setError("");
 
-    // Register moduysa şifre kontrolü
-    if (mode === "register" && password !== confirmPassword) {
-      setError("Passwords do not match!");
-      setLoading(false);
-      return;
-    }
+  // Register moduysa şifre kontrolü
+  if (mode === "register" && password !== confirmPassword) {
+    setError("Passwords do not match!");
+    setLoading(false);
+    return;
+  }
 
-    let error;
-    if (mode === "login") {
-      ({ error } = await supabase.auth.signInWithPassword({ email, password }));
-    } else {
-      ({ error } = await supabase.auth.signUp({ email, password }));
-    }
+  let authError;
 
-    if (error) {
-      setLoading(false);
-      setError(error.message);
-      return;
-    }
+  if (mode === "login") {
+    ({ error: authError } = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    }));
+  } else {
+    ({ error: authError } = await supabase.auth.signUp({
+      email,
+      password,
+    }));
+  }
 
+  if (authError) {
+    setLoading(false);
+    setError(authError.message);
+    return;
+  }
+
+  // ✅ 4 SANİYELİK LOADING
+  setTimeout(() => {
     setExiting(true);
-    setTimeout(() => onSuccess(), 300);
-  };
+    onSuccess();
+  }, 4000);
+};
+
 
   const containerClass =
     (exiting ? "login-exit " : "login-fade ") +
