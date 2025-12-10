@@ -16,12 +16,12 @@ const fromDb = (row: any): Trade => ({
   mood: row.mood ?? undefined,
   screenshotUrl: row.screenshot_url ?? undefined,
   notes: row.notes ?? undefined,
-  user_id: row.user_id, // ✅ user_id eklendi
+  user_id: row.user_id ?? undefined, // ✅ opsiyonel user_id
 });
 
 // UI → DB (camelCase → snake_case)
-const toDb = (trade: Omit<Trade, "id"> & { user_id: string }) => ({
-  user_id: trade.user_id, // ✅ Burayı ekledik
+const toDb = (trade: Omit<Trade, "id"> & { user_id?: string }) => ({
+  user_id: trade.user_id ?? null,
   date: trade.date,
   pair: trade.pair,
   direction: trade.direction,
@@ -48,7 +48,7 @@ export async function getTrades(user_id: string): Promise<Trade[]> {
 }
 
 export async function addTrade(
-  trade: Omit<Trade, "id" | "user_id"> & { user_id: string }
+  trade: Omit<Trade, "id"> & { user_id?: string }
 ): Promise<Trade> {
   const { data, error } = await supabase
     .from("trades")
