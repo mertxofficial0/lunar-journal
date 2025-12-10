@@ -84,7 +84,7 @@ function App() {
     fetchTrades().catch(console.error);
   }, [user]);
 
-  /* REALTIME SYNC USER BAZLI (tip güvenli) */
+      /* REALTIME SYNC USER BAZLI (tip güvenli) */
   useEffect(() => {
     if (!user) return;
 
@@ -95,29 +95,39 @@ function App() {
         { event: "*", schema: "public", table: "trades" },
         (payload) => {
           const payloadNew = payload.new as Partial<Trade> & { user_id?: string };
-          const payloadOld = payload.old as Partial<Trade>;
+          const payloadOld = payload.old as Partial<Trade> & { user_id?: string };
 
-          if (!payloadNew.user_id || payloadNew.user_id !== user.id) return;
+          const eventUserId = payloadNew.user_id ?? payloadOld.user_id;
+          if (!eventUserId || eventUserId !== user.id) return;
 
-          if (payload.eventType === "INSERT")
+          if (payload.eventType === "INSERT") {
             setTrades((prev) => [mapDbTradeToTrade(payloadNew), ...prev]);
+          }
 
-          if (payload.eventType === "UPDATE")
+          if (payload.eventType === "UPDATE") {
             setTrades((prev) =>
-              prev.map((t) => (t.id === payloadNew.id ? mapDbTradeToTrade(payloadNew) : t))
+              prev.map((t) =>
+                t.id === payloadNew.id ? mapDbTradeToTrade(payloadNew) : t
+              )
             );
+          }
 
-          if (payload.eventType === "DELETE")
-            setTrades((prev) => prev.filter((t) => t.id !== payloadOld.id));
+          if (payload.eventType === "DELETE") {
+            const deletedId = payloadOld.id;
+            if (!deletedId) return;
+
+            setTrades((prev) => prev.filter((t) => t.id !== deletedId));
+          }
         }
       )
       .subscribe();
 
     return () => {
-  supabase.removeChannel(channel);
-};
-
+      supabase.removeChannel(channel);
+    };
   }, [user]);
+
+
 
   /* ADD / DELETE */
 const handleAddTrade = useCallback(
@@ -129,8 +139,13 @@ const handleAddTrade = useCallback(
 );
 
 const handleDeleteTrade = useCallback(async (id: string) => {
+  // Optimistic UI
+  setTrades((prev) => prev.filter((t) => t.id !== id));
+
+  // DB’den sil
   await deleteTrade(id);
 }, []);
+
 
 
   /* STATS */
