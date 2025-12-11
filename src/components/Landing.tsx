@@ -20,6 +20,38 @@ export default function Landing({ onLogin }: LandingProps) {
 
   return (
     <div className="relative w-screen h-screen flex items-center justify-center bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 overflow-hidden">
+{/* BETA BANNER */}
+<div
+  className="
+    absolute top-10 
+    px-5 py-2 
+    rounded-2xl 
+    backdrop-blur-xl 
+    bg-white/100
+    border border-white/70 
+    shadow-[0_8px_22px_rgba(15,23,42,0.15)]
+    animate-[fadeIn_0.6s_ease-out]
+  "
+>
+  <span
+    className="
+      text-sm font-medium 
+      bg-gradient-to-r from-indigo-500 to-pink-500 
+      bg-clip-text text-transparent
+    "
+  >
+    Lunar Journal şu anda Beta sürümündedir • Hatalar oluşabilir
+  </span>
+</div>
+
+<style>
+{`
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-6px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+`}
+</style>
 
       {/* ---------------------- */}
       {/* 🔥 TOP LOADING BAR */}
