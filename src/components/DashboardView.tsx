@@ -1,3 +1,5 @@
+import { useEffect, useState } from "react";
+import { supabase } from "../lib/supabase";
 import WeeklyStats from "./WeeklyStats";
 import MonthlyCalendar from "./MonthlyCalendar";
 import type { Trade } from "../types";
@@ -30,7 +32,41 @@ type DashboardProps = {
 };
 
 export const DashboardView = ({ trades, stats }: DashboardProps) => {
-  // Equity curve (kümülatif PnL)
+
+  // 🔥 PROFİL STATE (sadece 1 tane!)
+  const [profile, setProfile] = useState<{
+    first_name: string | null;
+    last_name: string | null;
+    username: string | null;
+  } | null>(null);
+
+  // 🔥 Supabase’den kullanıcı bilgisi çek
+  useEffect(() => {
+  async function loadProfile() {
+    const { data: { user } } = await supabase.auth.getUser();
+
+    console.log("AUTH USER:", user);  // 👈 TEST
+
+    if (!user) return;
+
+    const { data, error } = await supabase
+      .from("profiles")
+      .select("first_name, last_name, username")
+      .eq("id", user.id)
+      .single();
+
+    console.log("PROFILE RESULT:", data, error); // 👈 TEST
+
+    setProfile(data);
+  }
+
+  loadProfile();
+}, []);
+
+  // -------------------------------------------------------------
+  // DASHBOARD İSTATİSTİK HESAPLAMALARI
+  // -------------------------------------------------------------
+
   const equityData = trades.map((t, idx) => ({
     index: idx + 1,
     label: t.date,
@@ -40,42 +76,44 @@ export const DashboardView = ({ trades, stats }: DashboardProps) => {
         .reduce((a, b) => a + b.resultUsd, 0) || 0,
   }));
 
-  // Win / loss data
   const winLossData = [
     { name: "Win", value: stats.wins },
     { name: "Loss", value: stats.losses },
   ];
 
-  // Günlük PnL (date -> sum)
   const dailyMap = new Map<string, number>();
   trades.forEach((t) => {
     const prev = dailyMap.get(t.date) ?? 0;
     dailyMap.set(t.date, prev + t.resultUsd);
   });
+
   const dailyPnl = Array.from(dailyMap.entries()).map(([date, value]) => ({
     date,
     value,
   }));
-// Haftalık PnL hesaplama
-const weekly = new Map<number, number>();
 
-dailyPnl.forEach((d) => {
-  const dayNum = Number(d.date.split("-")[2]); 
-  const weekNum = Math.ceil(dayNum / 7);
-  const prev = weekly.get(weekNum) ?? 0;
-  weekly.set(weekNum, prev + d.value);
-});
+  const weekly = new Map<number, number>();
+  dailyPnl.forEach((d) => {
+    const dayNum = Number(d.date.split("-")[2]);
+    const weekNum = Math.ceil(dayNum / 7);
+    const prev = weekly.get(weekNum) ?? 0;
+    weekly.set(weekNum, prev + d.value);
+  });
 
-const weeklyStats = Array.from(weekly.entries()).map(([week, pnl]) => ({
-  week,
-  pnl,
-}));
+  const weeklyStats = Array.from(weekly.entries()).map(([week, pnl]) => ({
+    week,
+    pnl,
+  }));
 
-  const greeting = "Good evening, Mert 👋";
+  // 🔥 Dynamic greeting
+  const greeting = profile
+    ? `Good evening, ${profile.first_name} ${profile.last_name} 👋`
+    : "Good evening 👋";
 
   return (
     <div className="flex-1 min-w-0 px-4 py-6 sm:px-6 lg:px-10 lg:py-8">
       <div className="mx-auto max-w-6xl space-y-6">
+        
         {/* HEADER */}
         <header className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
           <div>

@@ -1,15 +1,54 @@
+import { useState } from "react";
+
 type LandingProps = {
   onLogin: (mode?: "login" | "register") => void;
 };
 
 export default function Landing({ onLogin }: LandingProps) {
+  const [showBar, setShowBar] = useState(false);
+
+  // ✨ Login / Register butonları bar animasyonu tetikler
+  function handleClick(mode: "login" | "register") {
+    setShowBar(true);
+
+    // 1 saniyelik loading bar animasyonu
+    setTimeout(() => {
+      setShowBar(false);
+      onLogin(mode);
+    }, 800);
+  }
+
   return (
-    <div className="w-screen h-screen flex items-center justify-center bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 overflow-hidden">
-      {/* Arka plan liquid bloblar */}
+    <div className="relative w-screen h-screen flex items-center justify-center bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 overflow-hidden">
+
+      {/* ---------------------- */}
+      {/* 🔥 TOP LOADING BAR */}
+      {/* ---------------------- */}
+      <style>{`
+        @keyframes lunarProgress {
+          0%   { width: 0%; opacity: 1; }
+          100% { width: 100%; opacity: 1; }
+        }
+      `}</style>
+
+      {showBar && (
+        <div className="
+          fixed top-0 left-0 h-[3px] z-50
+          bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500
+          animate-[lunarProgress_0.8s_ease-out_forwards]
+          shadow-[0_0_14px_rgba(140,120,255,0.45)]
+        " />
+      )}
+
+      {/* ---------------------- */}
+      {/* ARKA PLAN BLOBLAR */}
+      {/* ---------------------- */}
       <div className="pointer-events-none absolute -top-40 -left-32 w-96 h-96 rounded-full bg-indigo-300/30 blur-3xl" />
       <div className="pointer-events-none absolute -bottom-48 -right-32 w-[520px] h-[520px] rounded-full bg-pink-300/30 blur-3xl" />
 
+      {/* ---------------------- */}
       {/* HERO CARD */}
+      {/* ---------------------- */}
       <div
         className="
           relative z-10
@@ -38,11 +77,12 @@ export default function Landing({ onLogin }: LandingProps) {
             karar kaliteni istatistiklerle geliştir.
           </p>
 
-          {/* ✅ BUTTONS */}
+          {/* BUTTONS */}
           <div className="mt-8 flex items-center gap-4">
+
             {/* LOGIN */}
             <button
-              onClick={() => onLogin("login")}
+              onClick={() => handleClick("login")}
               className="
                 px-6 py-3 rounded-2xl
                 text-sm font-medium text-white
@@ -58,7 +98,7 @@ export default function Landing({ onLogin }: LandingProps) {
 
             {/* REGISTER */}
             <button
-              onClick={() => onLogin("register")}
+              onClick={() => handleClick("register")}
               className="
                 px-6 py-3 rounded-2xl
                 text-sm font-medium

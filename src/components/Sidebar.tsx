@@ -1,11 +1,13 @@
 import React from "react";
 
 type SidebarProps = {
-  current: "dashboard" | "journal";
-  onChange: (page: "dashboard" | "journal") => void;
+  current: "dashboard" | "journal" | "profile";
+  onChange: (page: "dashboard" | "journal" | "profile") => void;
   onLogout: () => void;
-  loggingOut?: boolean; // ✅ yeni
+  loggingOut?: boolean;
 };
+
+
 
 export function Sidebar({
   current,
@@ -92,6 +94,12 @@ export function Sidebar({
               active={current === "journal"}
               onClick={() => onChange("journal")}
             />
+            <SidebarItem
+  label="Profile"
+  active={current === "profile"}
+  onClick={() => onChange("profile")}
+/>
+
           </nav>
 
           <div className="flex-1" />

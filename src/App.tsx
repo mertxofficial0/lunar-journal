@@ -1,3 +1,4 @@
+
 import "./App.css";
 import React, {
   useState,
@@ -12,6 +13,8 @@ import LoginScreen from "./components/LoginScreen";
 import { Sidebar } from "./components/Sidebar";
 import { DashboardView } from "./components/DashboardView";
 import JournalView from "./components/JournalView";
+import ProfileView from "./components/ProfileView";
+
 
 import type { User } from "@supabase/supabase-js";
 import type { Trade, NewTrade } from "./types";
@@ -44,7 +47,7 @@ function App() {
 
   const [stage, setStage] = useState<Stage>("loading");
   const [loginMode, setLoginMode] = useState<"login" | "register">("login");
-  const [page, setPage] = useState<"dashboard" | "journal">("dashboard");
+  const [page, setPage] = useState<"dashboard" | "journal" | "profile">("dashboard");
   const [loggingOut, setLoggingOut] = useState(false);
 
   const [user, setUser] = useState<User | null>(null);
@@ -239,6 +242,12 @@ const handleLogout = () => {
             />
           </div>
         )}
+        {page === "profile" && (
+  <div className="absolute inset-0 overflow-y-auto">
+    <ProfileView />
+  </div>
+)}
+
       </main>
     </div>
   );

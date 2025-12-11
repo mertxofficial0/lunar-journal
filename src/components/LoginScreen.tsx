@@ -30,14 +30,7 @@ function EyeToggle({ show }: { show: boolean }) {
         strokeWidth="2"
         viewBox="0 0 24 24"
       >
-        <line
-          x1="3"
-          y1="21"
-          x2="21"
-          y2="3"
-          strokeLinecap="round"
-          strokeLinejoin="round"
-        />
+        <line x1="3" y1="21" x2="21" y2="3" strokeLinecap="round" strokeLinejoin="round" />
       </svg>
     </div>
   );
@@ -59,42 +52,37 @@ export default function LoginScreen({
   initialMode,
   onBack,
 }: LoginScreenProps) {
-
   /* 🟣 Password strength */
-  const [passwordStrength, setPasswordStrength] = useState<
-    "weak" | "medium" | "strong" | ""
-  >("");
+  const [passwordStrength, setPasswordStrength] = useState<"weak" | "medium" | "strong" | "">("");
 
   function calculateStrength(pw: string) {
     let score = 0;
     if (pw.length >= 6) score++;
     if (/[A-Z]/.test(pw)) score++;
     if (/[0-9]/.test(pw) || /[^A-Za-z0-9]/.test(pw)) score++;
-
     if (score === 0) return "";
     if (score === 1) return "weak";
     if (score === 2) return "medium";
     return "strong";
   }
 
-  /* 🟢 Confirm Password Strength */
-  const [confirmStrength, setConfirmStrength] = useState<
-    "weak" | "medium" | "strong" | ""
-  >("");
-
-  
+  const [confirmStrength, setConfirmStrength] = useState<"weak" | "medium" | "strong" | "">("");
 
   function calculateConfirmStrength(pw: string) {
     let score = 0;
     if (pw.length >= 6) score++;
     if (/[A-Z]/.test(pw)) score++;
     if (/[0-9]/.test(pw) || /[^A-Za-z0-9]/.test(pw)) score++;
-
     if (score === 0) return "";
     if (score === 1) return "weak";
     if (score === 2) return "medium";
     return "strong";
   }
+
+  /* Extra register alanları */
+  const [firstName, setFirstName] = useState("");
+  const [lastName, setLastName] = useState("");
+  const [username, setUsername] = useState("");
 
   /* STATE */
   const [mode] = useState<"login" | "register">(initialMode ?? "login");
@@ -108,58 +96,79 @@ export default function LoginScreen({
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
   const [exiting, setExiting] = useState(false);
+  const [showBackBar, setShowBackBar] = useState(false);
+
 
   /* SUBMIT */
   const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (loading) return;
+  e.preventDefault();
+  if (loading) return;
 
-    setLoading(true);
-    setError("");
+  setLoading(true);
+  setError("");
 
-    if (mode === "register") {
-      if (password.length < 8) {
-  setError("Password must be at least 8 characters!");
-  setLoading(false);
-  return;
-}
-      if (password !== confirmPassword) {
-        setError("Passwords do not match!");
-        setLoading(false);
-        return;
-      }
-
-      if (passwordStrength === "weak") {
-        setError("Password too weak!");
-        setLoading(false);
-        return;
-      }
-    }
-
-    let authError;
-    if (mode === "login") {
-      ({ error: authError } = await supabase.auth.signInWithPassword({
-        email,
-        password,
-      }));
-    } else {
-      ({ error: authError } = await supabase.auth.signUp({
-        email,
-        password,
-      }));
-    }
-
-    if (authError) {
+  if (mode === "register") {
+    if (password.length < 8) {
+      setError("Password must be at least 8 characters!");
       setLoading(false);
-      setError(authError.message);
       return;
     }
 
-    setTimeout(() => {
-      setExiting(true);
-      onSuccess();
-    }, 4000);
-  };
+    if (password !== confirmPassword) {
+      setError("Passwords do not match!");
+      setLoading(false);
+      return;
+    }
+
+    if (passwordStrength === "weak") {
+      setError("Password too weak!");
+      setLoading(false);
+      return;
+    }
+  }
+
+  let authError;
+  let data;
+
+  if (mode === "login") {
+    const result = await supabase.auth.signInWithPassword({
+      email,
+      password,
+    });
+    authError = result.error;
+  } else {
+    const result = await supabase.auth.signUp({
+      email,
+      password,
+    });
+
+    authError = result.error;
+    data = result.data;
+
+    // 🔥 SIGN UP BAŞARILIYSA PROFİLE EKLE
+    if (!authError && data?.user) {
+      await supabase.from("profiles").insert({
+        id: data.user.id,
+        first_name: firstName,
+        last_name: lastName,
+        username: username,
+      });
+    }
+  }
+
+  if (authError) {
+    setLoading(false);
+    setError(authError.message);
+    return;
+  }
+
+  setTimeout(() => {
+    setExiting(true);
+    onSuccess();
+  }, 4000);
+};
+
+
 
   const containerClass =
     (exiting ? "login-exit " : "login-fade ") +
@@ -167,6 +176,23 @@ export default function LoginScreen({
 
   return (
     <div className={containerClass}>
+      {/* BACK PROGRESS BAR */}
+{showBackBar && (
+  <div
+    className="
+      fixed top-0 left-0 h-[3px] z-[9999]
+      bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500
+      animate-[lunarProgress_0.5s_ease-out_forwards]
+    "
+  />
+)}
+<style>{`
+  @keyframes lunarProgress {
+    0% { width: 0%; opacity: 1; }
+    100% { width: 100%; opacity: 1; }
+  }
+`}</style>
+
       {/* BACKGROUND BLURS */}
       <div className="pointer-events-none absolute -top-40 -left-24 w-80 h-80 rounded-full bg-purple-300/35 blur-3xl" />
       <div className="pointer-events-none absolute -bottom-48 -right-12 w-96 h-96 rounded-full bg-sky-300/30 blur-3xl" />
@@ -174,11 +200,18 @@ export default function LoginScreen({
 
       {/* CARD */}
       <div className="relative z-10 w-[380px] px-8 py-7 rounded-[26px] bg-white/75 border border-white/80 shadow-[0_22px_55px_rgba(148,163,184,0.55)] backdrop-blur-2xl flex flex-col items-center overflow-hidden">
-
+        
         {onBack && (
           <button
             type="button"
-            onClick={onBack}
+            onClick={() => {
+  setShowBackBar(true);
+  setTimeout(() => {
+    setShowBackBar(false);
+    onBack && onBack();
+  }, 500); // 0.5 saniye sonra geri dön
+}}
+
             className="absolute top-4 left-4 flex items-center gap-1 px-4 py-2 rounded-2xl bg-white/40 text-slate-700 font-medium backdrop-blur-xl shadow-[0_8px_22px_rgba(15,23,42,0.18)] hover:bg-white/60 transition"
           >
             Geri
@@ -218,6 +251,62 @@ export default function LoginScreen({
         <form onSubmit={handleSubmit} className="w-full flex flex-col gap-4 relative z-10">
           <div className="space-y-3">
 
+            {/* REGISTER MODE EXTRA FIELDS */}
+            {mode === "register" && (
+              <>
+                {/* FIRST NAME */}
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-[11px] uppercase tracking-[0.18em] text-slate-500/90">
+                    First Name
+                  </label>
+                  <input
+                    placeholder="Mert"
+                    value={firstName}
+                    disabled={loading}
+                    onChange={(e) => setFirstName(e.target.value)}
+                    className="w-full px-4 py-2.5 rounded-[14px] border border-slate-200/80 bg-white/80 
+                               text-slate-900 placeholder:text-slate-400/90 focus:bg-white 
+                               focus:ring-2 focus:ring-indigo-300/70 outline-none transition text-sm"
+                  />
+                </div>
+
+                {/* LAST NAME */}
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-[11px] uppercase tracking-[0.18em] text-slate-500/90">
+                    Last Name
+                  </label>
+                  <input
+                    placeholder="Zengin"
+                    value={lastName}
+                    disabled={loading}
+                    onChange={(e) => setLastName(e.target.value)}
+                    className="w-full px-4 py-2.5 rounded-[14px] border border-slate-200/80 bg-white/80 
+                               text-slate-900 placeholder:text-slate-400/90 focus:bg-white 
+                               focus:ring-2 focus:ring-indigo-300/70 outline-none transition text-sm"
+                  />
+                </div>
+
+                {/* USERNAME */}
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-[11px] uppercase tracking-[0.18em] text-slate-500/90">
+                    Username
+                  </label>
+                  <input
+                    placeholder="mertztrader"
+                    value={username}
+                    disabled={loading}
+                    onChange={(e) => setUsername(e.target.value.toLowerCase())}
+                    className="
+                      w-full px-4 py-2.5 rounded-[14px] border border-slate-200/80 
+                      bg-white/80 text-slate-900 placeholder:text-slate-400/90 
+                      focus:bg-white focus:ring-2 focus:ring-indigo-300/70 
+                      outline-none transition text-sm
+                    "
+                  />
+                </div>
+              </>
+            )}
+
             {/* EMAIL */}
             <div className="flex flex-col gap-1.5">
               <label className="text-[11px] uppercase tracking-[0.18em] text-slate-500/90">
@@ -245,15 +334,10 @@ export default function LoginScreen({
                   value={password}
                   disabled={loading}
                   onChange={(e) => {
-  const val = e.target.value;
-  setPassword(val);
-
-  const strength = calculateStrength(val);
-  setPasswordStrength(strength);
-
-  
-}}
-
+                    const val = e.target.value;
+                    setPassword(val);
+                    setPasswordStrength(calculateStrength(val));
+                  }}
                   className="
                     w-full px-4 py-2.5 rounded-[14px] border border-slate-200/80 
                     bg-white/80 text-slate-900 placeholder:text-slate-400/90 
@@ -273,31 +357,25 @@ export default function LoginScreen({
 
               {/* PASSWORD STRENGTH BAR */}
               {mode === "register" && (
-  <div
-    className={`
-      w-[95%] -ml-[-2%] mt-[3px]
-      ${passwordStrength ? "animate-strength-in" : "animate-strength-out"}
-    `}
-  >
-    {passwordStrength && (
-      <div className="h-[4px] rounded-full bg-slate-200 overflow-hidden">
-        <div
-          className={`
-            h-full rounded-full transition-all duration-300
-            ${
-              passwordStrength === "weak"
-                ? "bg-rose-500 w-1/3"
-                : passwordStrength === "medium"
-                ? "bg-amber-500 w-2/3"
-                : "bg-emerald-500 w-full"
-            }
-          `}
-        ></div>
-      </div>
-    )}
-  </div>
-)}
-
+                <div className={`w-[95%] -ml-[-2%] mt-[3px] ${passwordStrength ? "animate-strength-in" : "animate-strength-out"}`}>
+                  {passwordStrength && (
+                    <div className="h-[4px] rounded-full bg-slate-200 overflow-hidden">
+                      <div
+                        className={`
+                          h-full rounded-full transition-all duration-300
+                          ${
+                            passwordStrength === "weak"
+                              ? "bg-rose-500 w-1/3"
+                              : passwordStrength === "medium"
+                              ? "bg-amber-500 w-2/3"
+                              : "bg-emerald-500 w-full"
+                          }
+                        `}
+                      ></div>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* CONFIRM PASSWORD */}
@@ -333,33 +411,24 @@ export default function LoginScreen({
                 </div>
 
                 {/* CONFIRM BAR */}
-                {mode === "register" && (
-  <div
-    className={`
-      w-[95%] -ml-[-2%] mt-[3px]
-      ${confirmStrength ? "animate-strength-in" : "animate-strength-out"}
-    `}
-  >
-    {confirmStrength && (
-      <div className="h-[4px] rounded-full bg-slate-200 overflow-hidden">
-        <div
-          className={`
-            h-full rounded-full transition-all duration-300
-            ${
-              confirmStrength === "weak"
-                ? "bg-rose-500 w-1/3"
-                : confirmStrength === "medium"
-                ? "bg-amber-500 w-2/3"
-                : "bg-emerald-500 w-full"
-            }
-          `}
-        ></div>
-      </div>
-    )}
-  </div>
-)}
-
-
+                <div className={`w-[95%] -ml-[-2%] mt-[3px] ${confirmStrength ? "animate-strength-in" : "animate-strength-out"}`}>
+                  {confirmStrength && (
+                    <div className="h-[4px] rounded-full bg-slate-200 overflow-hidden">
+                      <div
+                        className={`
+                          h-full rounded-full transition-all duration-300
+                          ${
+                            confirmStrength === "weak"
+                              ? "bg-rose-500 w-1/3"
+                              : confirmStrength === "medium"
+                              ? "bg-amber-500 w-2/3"
+                              : "bg-emerald-500 w-full"
+                          }
+                        `}
+                      ></div>
+                    </div>
+                  )}
+                </div>
               </div>
             )}
           </div>
@@ -367,7 +436,7 @@ export default function LoginScreen({
           {/* ERROR */}
           {error && <div className="text-xs text-rose-500 mt-1">{error}</div>}
 
-          {/* SUBMIT */}
+          {/* SUBMIT BUTTON */}
           <button
             type="submit"
             disabled={loading}
